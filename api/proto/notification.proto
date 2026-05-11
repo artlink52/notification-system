@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package notification;
+
+option go_package = "github.com/artlink52/notification-system/pkg/pb/notification;notification";
+
+service NotificationService {
+  rpc SendNotification(SendNotificationRequest) returns (SendNotificationResponse);
+}
+
+enum NotificationType {
+  EMAIL = 0;
+  SMS   = 1;
+}
+
+enum NotificationStatus {
+  PENDING = 0;
+  SENT    = 1;
+  FAILED  = 2;
+}
+
+message SendNotificationRequest {
+  int64            user_id = 1;
+  string           message = 2;
+  NotificationType type    = 3;
+}
+
+message SendNotificationResponse {
+  int64              notification_id = 1;
+  NotificationStatus status          = 2;
+}
