@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/artlink52/notification-system/internal/gateway/queue"
 	"github.com/artlink52/notification-system/internal/models"
@@ -21,6 +22,8 @@ func NewPool(q *queue.Queue, client pb.NotificationServiceClient, size int) *Poo
 
 // Run запускает size горутин-воркеров. Блокирует до отмены ctx.
 func (p *Pool) Run(ctx context.Context) {
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
 	for i := range p.size {
 		go p.run(ctx, i)
 	}

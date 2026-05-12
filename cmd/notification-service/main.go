@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net"
+	"os"
 	"os/signal"
 	"syscall"
 
@@ -13,11 +14,18 @@ import (
 	"google.golang.org/grpc"
 )
 
+func storageAddr() string {
+	if addr := os.Getenv("STORAGE_SERVICE_ADDR"); addr != "" {
+		return addr
+	}
+	return "localhost:50052"
+}
+
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	storageConn, err := grpc.NewClient("localhost:50052")
+	storageConn, err := grpc.NewClient(storageAddr())
 	if err != nil {
 		log.Fatal(err)
 	}

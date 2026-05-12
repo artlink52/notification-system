@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/artlink52/notification-system/internal/gateway/queue"
@@ -57,11 +58,15 @@ func (h *Handler) SendNotification(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
-	json.NewEncoder(w).Encode(sendResponse{Status: "queued"})
+	if err := json.NewEncoder(w).Encode(sendResponse{Status: "queued"}); err != nil {
+		writeError(w, "could not encode response", http.StatusInternalServerError)
+	}
 }
 
 func writeError(w http.ResponseWriter, msg string, code int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
-	json.NewEncoder(w).Encode(map[string]string{"error": msg})
+	if err := json.NewEncoder(w).Encode(map[string]string{"error": msg}); err != nil {
+		log.Printf("could not encode response: %v", err)
+	}
 }

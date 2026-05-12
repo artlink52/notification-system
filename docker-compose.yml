@@ -1,0 +1,57 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: notifications
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d notifications"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  storage-service:
+    build:
+      context: .
+      args:
+        SERVICE: storage-service
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/notifications?sslmode=disable
+    ports:
+      - "50052:50052"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  notification-service:
+    build:
+      context: .
+      args:
+        SERVICE: notification-service
+    environment:
+      STORAGE_SERVICE_ADDR: storage-service:50052
+    ports:
+      - "50051:50051"
+    depends_on:
+      - storage-service
+
+  api-gateway:
+    build:
+      context: .
+      args:
+        SERVICE: api-gateway
+    environment:
+      NOTIFICATION_SERVICE_ADDR: notification-service:50051
+    ports:
+      - "8080:8080"
+    depends_on:
+      - notification-service
+
+volumes:
+  postgres_data:

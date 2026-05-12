@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 
@@ -14,11 +15,18 @@ import (
 	"google.golang.org/grpc"
 )
 
+func notificationAddr() string {
+	if addr := os.Getenv("NOTIFICATION_SERVICE_ADDR"); addr != "" {
+		return addr
+	}
+	return "localhost:50051"
+}
+
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	conn, err := grpc.NewClient("localhost:50051")
+	conn, err := grpc.NewClient(notificationAddr())
 	if err != nil {
 		log.Fatal(err)
 	}
